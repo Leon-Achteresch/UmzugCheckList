@@ -134,6 +134,7 @@ export function TodoList({
       category_id: categoryId,
     };
 
+    // Aufgabe erstellen
     onTodoCreate(JSON.stringify(todoData));
 
     // Dialog schließen und Daten zurücksetzen

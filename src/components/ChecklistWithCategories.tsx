@@ -13,7 +13,7 @@ export interface ChecklistWithCategoriesData {
   title: string;
   project_id: string;
   categories: Category[];
-  uncategorizedTodos?: Todo[];
+  uncategorizedTodos: Todo[];
 }
 
 interface ChecklistWithCategoriesProps {
@@ -75,7 +75,7 @@ export function ChecklistWithCategories({
   const handleCategoryDelete = (id: string) => {
     // Todos aus der gelöschten Kategorie zu den unkategorisierten Todos hinzufügen
     const categoryToDelete = checklist.categories.find((cat) => cat.id === id);
-    let newUncategorizedTodos = [...(checklist.uncategorizedTodos || [])];
+    let newUncategorizedTodos = [...checklist.uncategorizedTodos];
 
     if (categoryToDelete) {
       newUncategorizedTodos = [
@@ -114,7 +114,7 @@ export function ChecklistWithCategories({
       // Todo ohne Kategorie hinzufügen
       onUpdate({
         ...checklist,
-        uncategorizedTodos: [...(checklist.uncategorizedTodos || []), newTodo],
+        uncategorizedTodos: [...checklist.uncategorizedTodos, newTodo],
       });
     }
   };
@@ -145,10 +145,9 @@ export function ChecklistWithCategories({
       // Todo ohne Kategorie aktualisieren
       onUpdate({
         ...checklist,
-        uncategorizedTodos:
-          checklist.uncategorizedTodos?.map((todo) =>
-            todo.id === id ? { ...todo, ...updates } : todo
-          ) || [],
+        uncategorizedTodos: checklist.uncategorizedTodos.map((todo) =>
+          todo.id === id ? { ...todo, ...updates } : todo
+        ),
       });
     }
   };
@@ -177,8 +176,9 @@ export function ChecklistWithCategories({
       // Todo ohne Kategorie löschen
       onUpdate({
         ...checklist,
-        uncategorizedTodos:
-          checklist.uncategorizedTodos?.filter((todo) => todo.id !== id) || [],
+        uncategorizedTodos: checklist.uncategorizedTodos.filter(
+          (todo) => todo.id !== id
+        ),
       });
     }
   };
@@ -204,7 +204,7 @@ export function ChecklistWithCategories({
 
     // Falls nicht in einer Kategorie, bei den unkategorisierten Todos suchen
     if (!todoToMove) {
-      todoToMove = checklist.uncategorizedTodos?.find(
+      todoToMove = checklist.uncategorizedTodos.find(
         (todo) => todo.id === todoId
       );
     }
@@ -212,7 +212,7 @@ export function ChecklistWithCategories({
     if (!todoToMove) return; // Todo nicht gefunden
 
     let updatedCategories = [...checklist.categories];
-    let updatedUncategorizedTodos = [...(checklist.uncategorizedTodos || [])];
+    let updatedUncategorizedTodos = [...checklist.uncategorizedTodos];
 
     // Todo aus der Quelle entfernen
     if (sourceCategory) {
@@ -269,7 +269,7 @@ export function ChecklistWithCategories({
       );
       return category ? category.todos.length : 0;
     } else {
-      return checklist.uncategorizedTodos?.length || 0;
+      return checklist.uncategorizedTodos.length;
     }
   };
 
@@ -324,7 +324,7 @@ export function ChecklistWithCategories({
       <div className="p-4">
         <CategoryManager
           categories={checklist.categories}
-          uncategorizedTodos={checklist.uncategorizedTodos || []}
+          uncategorizedTodos={checklist.uncategorizedTodos}
           onCategoryCreate={handleCategoryCreate}
           onCategoryUpdate={handleCategoryUpdate}
           onCategoryDelete={handleCategoryDelete}

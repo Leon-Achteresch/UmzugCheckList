@@ -346,7 +346,17 @@ export function CategoryManager({
                 <CardContent className="pt-4">
                   <TodoList
                     todos={category.todos}
-                    onTodoCreate={(text) => onTodoCreate(text, category.id)}
+                    onTodoCreate={(todoData) => {
+                      // JSON-String in ein Objekt umwandeln
+                      let data;
+                      try {
+                        data = JSON.parse(todoData);
+                        onTodoCreate(data.text, category.id);
+                      } catch (e) {
+                        // Falls kein gültiger JSON-String, als normalen Text behandeln
+                        onTodoCreate(todoData, category.id);
+                      }
+                    }}
                     onTodoUpdate={onTodoUpdate}
                     onTodoDelete={onTodoDelete}
                     onTodoCategoryChange={(todoId) =>
@@ -373,7 +383,17 @@ export function CategoryManager({
           <CardContent className="pt-4">
             <TodoList
               todos={uncategorizedTodos}
-              onTodoCreate={(text) => onTodoCreate(text)}
+              onTodoCreate={(todoData) => {
+                // JSON-String in ein Objekt umwandeln
+                let data;
+                try {
+                  data = JSON.parse(todoData);
+                  onTodoCreate(data.text);
+                } catch (e) {
+                  // Falls kein gültiger JSON-String, als normalen Text behandeln
+                  onTodoCreate(todoData);
+                }
+              }}
               onTodoUpdate={onTodoUpdate}
               onTodoDelete={onTodoDelete}
               onTodoCategoryChange={(todoId) => {

@@ -107,8 +107,9 @@ export function ProjectManager() {
                   project_id: dbProject.id,
                 };
 
+                // Null-Werte zu undefined konvertieren
                 const checklistWithCategories =
-                  await getChecklistWithCategories(dbProject.id);
+                  (await getChecklistWithCategories(dbProject.id)) || undefined;
 
                 return {
                   id: dbProject.id,
@@ -135,9 +136,9 @@ export function ProjectManager() {
                 project_id: dbProject.id,
               };
 
-              const checklistWithCategories = await getChecklistWithCategories(
-                dbProject.id
-              );
+              // Null-Werte zu undefined konvertieren
+              const checklistWithCategories =
+                (await getChecklistWithCategories(dbProject.id)) || undefined;
 
               return {
                 id: dbProject.id,
@@ -287,13 +288,19 @@ export function ProjectManager() {
   async function handleUpdateChecklistWithCategories(
     updatedChecklist: ChecklistWithCategoriesData
   ) {
-    await saveChecklistWithCategories(updatedChecklist);
+    // Stelle sicher, dass uncategorizedTodos immer ein Array ist
+    const checklist = {
+      ...updatedChecklist,
+      uncategorizedTodos: updatedChecklist.uncategorizedTodos || [],
+    };
+
+    await saveChecklistWithCategories(checklist);
 
     // Aktualisiere das Projekt in der lokalen State
     setProjects((prevProjects) =>
       prevProjects.map((project) =>
         project.id === activeProjectId
-          ? { ...project, checklistWithCategories: updatedChecklist }
+          ? { ...project, checklistWithCategories: checklist }
           : project
       )
     );
@@ -316,6 +323,7 @@ export function ProjectManager() {
           title: activeProject.checklist.title || "Projektaufgaben",
           project_id: activeProject.id,
           categories: [],
+          uncategorizedTodos: [],
         };
 
         // Setze die neue Checkliste und speichere sie
@@ -418,6 +426,7 @@ export function ProjectManager() {
                         title: "Projektaufgaben",
                         project_id: newProject.id,
                         categories: [],
+                        uncategorizedTodos: [],
                       };
 
                     await saveChecklistWithCategories(
