@@ -573,7 +573,7 @@ export async function getChecklistWithCategories(projectId: string) {
     `;
 
     if (!checklists.length) {
-      return null;
+      return undefined; // Statt null ein undefined zurückgeben
     }
 
     const checklist = checklists[0];
@@ -585,7 +585,18 @@ export async function getChecklistWithCategories(projectId: string) {
     const allTodos = await getTodosByChecklistId(checklist.id);
 
     // Todos ohne Kategorie finden
-    const uncategorizedTodos = allTodos.filter((todo) => !todo.category_id);
+    const uncategorizedDbTodos = allTodos.filter((todo) => !todo.category_id);
+
+    // Formatiere die Todos ohne Kategorie
+    const uncategorizedTodos = uncategorizedDbTodos.map((todo) => ({
+      id: todo.id,
+      text: todo.text,
+      completed: todo.completed,
+      position: todo.position,
+      link: todo.link || undefined,
+      price: todo.price || undefined,
+      notes: todo.notes || undefined,
+    }));
 
     // Kategorien mit ihren Todos erstellen
     const categoriesWithTodos = await Promise.all(
@@ -616,27 +627,16 @@ export async function getChecklistWithCategories(projectId: string) {
       })
     );
 
-    // Formatierte Todos ohne Kategorie
-    const formattedUncategorizedTodos = uncategorizedTodos.map((todo) => ({
-      id: todo.id,
-      text: todo.text,
-      completed: todo.completed,
-      position: todo.position,
-      link: todo.link || undefined,
-      price: todo.price || undefined,
-      notes: todo.notes || undefined,
-    }));
-
     return {
       id: checklist.id,
       title: checklist.title,
       categories: categoriesWithTodos,
-      uncategorizedTodos: formattedUncategorizedTodos,
+      uncategorizedTodos, // Jetzt immer ein Array
       project_id: checklist.project_id,
     };
   } catch (error) {
-    console.error("Fehler beim Abrufen der Checkliste mit Kategorien:", error);
-    return null;
+    console.error("Fehler beim Abrufen der kategorisierten Checkliste:", error);
+    return undefined; // Statt null ein undefined zurückgeben
   }
 }
 
