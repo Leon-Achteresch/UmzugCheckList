@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CategoryManager } from "./CategoryManager";
 import { Todo, Category } from "@/lib/actions";
+import { toast } from "sonner";
 
 export interface ChecklistWithCategoriesData {
   id: string;
@@ -153,33 +154,39 @@ export function ChecklistWithCategories({
   };
 
   // Todo löschen
-  const handleTodoDelete = (id: string) => {
-    // Prüfen, ob das Todo in einer Kategorie ist
-    let categoryWithTodo = checklist.categories.find((category) =>
-      category.todos.some((todo) => todo.id === id)
-    );
+  const handleTodoDelete = async (id: string) => {
+    try {
+      // Prüfen, ob das Todo in einer Kategorie ist
+      let categoryWithTodo = checklist.categories.find((category) =>
+        category.todos.some((todo) => todo.id === id)
+      );
 
-    if (categoryWithTodo) {
-      // Todo aus einer Kategorie löschen
-      onUpdate({
-        ...checklist,
-        categories: checklist.categories.map((category) =>
-          category.id === categoryWithTodo!.id
-            ? {
-                ...category,
-                todos: category.todos.filter((todo) => todo.id !== id),
-              }
-            : category
-        ),
-      });
-    } else {
-      // Todo ohne Kategorie löschen
-      onUpdate({
-        ...checklist,
-        uncategorizedTodos: checklist.uncategorizedTodos.filter(
-          (todo) => todo.id !== id
-        ),
-      });
+      if (categoryWithTodo) {
+        // Todo aus einer Kategorie löschen
+        onUpdate({
+          ...checklist,
+          categories: checklist.categories.map((category) =>
+            category.id === categoryWithTodo!.id
+              ? {
+                  ...category,
+                  todos: category.todos.filter((todo) => todo.id !== id),
+                }
+              : category
+          ),
+        });
+      } else {
+        // Todo ohne Kategorie löschen
+        onUpdate({
+          ...checklist,
+          uncategorizedTodos: checklist.uncategorizedTodos.filter(
+            (todo) => todo.id !== id
+          ),
+        });
+      }
+      toast.success("Aufgabe wurde erfolgreich gelöscht");
+    } catch (error) {
+      console.error("Fehler beim Löschen der Aufgabe:", error);
+      toast.error("Fehler beim Löschen der Aufgabe");
     }
   };
 

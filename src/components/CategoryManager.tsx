@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import { Category, Todo } from "@/lib/actions";
 import { TodoList } from "./TodoList";
+import { toast } from "sonner";
 
 interface CategoryManagerProps {
   categories: Category[];
@@ -173,6 +174,16 @@ export function CategoryManager({
     } else if (direction === "down" && categoryIndex < categories.length - 1) {
       const newPosition = categories[categoryIndex + 1].position;
       onCategoryUpdate(categoryId, { position: newPosition });
+    }
+  };
+
+  const handleTodoDelete = async (id: string) => {
+    try {
+      await onTodoDelete(id);
+      toast.success("Aufgabe wurde erfolgreich gelöscht");
+    } catch (error) {
+      console.error("Fehler beim Löschen der Aufgabe:", error);
+      toast.error("Fehler beim Löschen der Aufgabe");
     }
   };
 
@@ -358,7 +369,7 @@ export function CategoryManager({
                       }
                     }}
                     onTodoUpdate={onTodoUpdate}
-                    onTodoDelete={onTodoDelete}
+                    onTodoDelete={handleTodoDelete}
                     onTodoCategoryChange={(todoId) =>
                       onTodoCategoryChange(todoId, null)
                     }
@@ -395,7 +406,7 @@ export function CategoryManager({
                 }
               }}
               onTodoUpdate={onTodoUpdate}
-              onTodoDelete={onTodoDelete}
+              onTodoDelete={handleTodoDelete}
               onTodoCategoryChange={(todoId) => {
                 if (categories.length > 0) {
                   onTodoCategoryChange(todoId, categories[0].id);

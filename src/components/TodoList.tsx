@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -180,6 +181,16 @@ export function TodoList({
     onTodoUpdate(id, { completed: !completed });
   };
 
+  const handleTodoDelete = async (id: string) => {
+    try {
+      await onTodoDelete(id);
+      toast.success("Aufgabe wurde erfolgreich gelöscht");
+    } catch (error) {
+      console.error("Fehler beim Löschen der Aufgabe:", error);
+      toast.error("Fehler beim Löschen der Aufgabe");
+    }
+  };
+
   return (
     <div className="space-y-3">
       {/* Todoliste */}
@@ -310,7 +321,7 @@ export function TodoList({
                     )}
                   </div>
                 </div>
-                <div className="flex items-start ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-start ml-2 opacity-100 md:group-hover:opacity-100 transition-opacity">
                   {onTodoCategoryChange && (
                     <Button
                       variant="ghost"
@@ -333,7 +344,7 @@ export function TodoList({
                     variant="ghost"
                     size="sm"
                     className="h-7 w-7 p-0 text-red-500"
-                    onClick={() => onTodoDelete(todo.id)}
+                    onClick={() => handleTodoDelete(todo.id)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>

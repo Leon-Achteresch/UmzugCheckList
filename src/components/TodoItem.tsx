@@ -155,7 +155,7 @@ export function TodoItem({
         )}
       </td>
       <td className="p-2 align-middle text-right">
-        <div className="flex justify-end space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex justify-end space-x-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => setIsEditing(true)}
             className="rounded-full p-1.5 text-gray-400 transition-all hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400"

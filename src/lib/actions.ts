@@ -512,10 +512,28 @@ export async function toggleTodoCompleted(id: string) {
 export async function deleteTodo(todoId: string) {
   try {
     const sql = await getDbClient();
-    await sql`
-      DELETE FROM todos 
+
+    // Prüfe zuerst, ob das Todo existiert
+    const todoExists = await sql`
+      SELECT COUNT(*) as count FROM todos 
       WHERE id = ${todoId}
     `;
+
+    if (parseInt(todoExists[0].count) === 0) {
+      throw new Error("Todo nicht gefunden");
+    }
+
+    // Todo löschen
+    const result = await sql`
+      DELETE FROM todos 
+      WHERE id = ${todoId}
+      RETURNING *
+    `;
+
+    if (result.length === 0) {
+      throw new Error("Todo konnte nicht gelöscht werden");
+    }
+
     return true;
   } catch (error) {
     console.error("Fehler beim Löschen des Todos:", error);
