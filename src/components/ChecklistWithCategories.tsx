@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { Check, Edit, Pencil, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PencilIcon, Save, XIcon } from "lucide-react";
 import { CategoryManager } from "./CategoryManager";
 import { Todo, Category } from "@/lib/actions";
 
 export interface ChecklistWithCategoriesData {
   id: string;
   title: string;
-  categories: Category[];
-  uncategorizedTodos: Todo[];
   project_id: string;
+  categories: Category[];
+  uncategorizedTodos?: Todo[];
 }
 
 interface ChecklistWithCategoriesProps {
@@ -75,7 +75,7 @@ export function ChecklistWithCategories({
   const handleCategoryDelete = (id: string) => {
     // Todos aus der gelöschten Kategorie zu den unkategorisierten Todos hinzufügen
     const categoryToDelete = checklist.categories.find((cat) => cat.id === id);
-    let newUncategorizedTodos = [...checklist.uncategorizedTodos];
+    let newUncategorizedTodos = [...(checklist.uncategorizedTodos || [])];
 
     if (categoryToDelete) {
       newUncategorizedTodos = [
@@ -114,7 +114,7 @@ export function ChecklistWithCategories({
       // Todo ohne Kategorie hinzufügen
       onUpdate({
         ...checklist,
-        uncategorizedTodos: [...checklist.uncategorizedTodos, newTodo],
+        uncategorizedTodos: [...(checklist.uncategorizedTodos || []), newTodo],
       });
     }
   };
@@ -145,9 +145,10 @@ export function ChecklistWithCategories({
       // Todo ohne Kategorie aktualisieren
       onUpdate({
         ...checklist,
-        uncategorizedTodos: checklist.uncategorizedTodos.map((todo) =>
-          todo.id === id ? { ...todo, ...updates } : todo
-        ),
+        uncategorizedTodos:
+          checklist.uncategorizedTodos?.map((todo) =>
+            todo.id === id ? { ...todo, ...updates } : todo
+          ) || [],
       });
     }
   };
@@ -176,9 +177,8 @@ export function ChecklistWithCategories({
       // Todo ohne Kategorie löschen
       onUpdate({
         ...checklist,
-        uncategorizedTodos: checklist.uncategorizedTodos.filter(
-          (todo) => todo.id !== id
-        ),
+        uncategorizedTodos:
+          checklist.uncategorizedTodos?.filter((todo) => todo.id !== id) || [],
       });
     }
   };
@@ -204,7 +204,7 @@ export function ChecklistWithCategories({
 
     // Falls nicht in einer Kategorie, bei den unkategorisierten Todos suchen
     if (!todoToMove) {
-      todoToMove = checklist.uncategorizedTodos.find(
+      todoToMove = checklist.uncategorizedTodos?.find(
         (todo) => todo.id === todoId
       );
     }
@@ -212,7 +212,7 @@ export function ChecklistWithCategories({
     if (!todoToMove) return; // Todo nicht gefunden
 
     let updatedCategories = [...checklist.categories];
-    let updatedUncategorizedTodos = [...checklist.uncategorizedTodos];
+    let updatedUncategorizedTodos = [...(checklist.uncategorizedTodos || [])];
 
     // Todo aus der Quelle entfernen
     if (sourceCategory) {
@@ -269,64 +269,62 @@ export function ChecklistWithCategories({
       );
       return category ? category.todos.length : 0;
     } else {
-      return checklist.uncategorizedTodos.length;
+      return checklist.uncategorizedTodos?.length || 0;
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
-        {editingTitle ? (
-          <div className="flex items-center w-full">
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="flex-grow"
-              placeholder="Checklisten-Titel..."
-              autoFocus
-              onKeyDown={(e) => e.key === "Enter" && handleTitleSave()}
-            />
-            <div className="flex ml-2">
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-gray-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+          {editingTitle ? (
+            <div className="flex items-center space-x-2 w-full">
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="flex-grow"
+                placeholder="Titel der Checkliste..."
+                autoFocus
+              />
+              <div className="flex space-x-1">
+                <Button
+                  onClick={handleTitleSave}
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 p-0"
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={() => setEditingTitle(false)}
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between w-full">
+              <h2 className="text-xl font-semibold">{checklist.title}</h2>
               <Button
+                onClick={() => setEditingTitle(true)}
                 variant="ghost"
-                size="sm"
-                onClick={handleTitleSave}
-                className="h-9 w-9 p-0"
+                size="icon"
+                className="h-8 w-8 p-0"
               >
-                <Save className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setTitle(checklist.title);
-                  setEditingTitle(false);
-                }}
-                className="h-9 w-9 p-0"
-              >
-                <XIcon className="h-4 w-4" />
+                <Edit className="h-4 w-4" />
               </Button>
             </div>
-          </div>
-        ) : (
-          <div className="w-full flex justify-between items-center">
-            <h2 className="text-lg font-medium">{checklist.title}</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setEditingTitle(true)}
-              className="h-8 w-8 p-0"
-            >
-              <PencilIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="p-4">
         <CategoryManager
           categories={checklist.categories}
-          uncategorizedTodos={checklist.uncategorizedTodos}
+          uncategorizedTodos={checklist.uncategorizedTodos || []}
           onCategoryCreate={handleCategoryCreate}
           onCategoryUpdate={handleCategoryUpdate}
           onCategoryDelete={handleCategoryDelete}

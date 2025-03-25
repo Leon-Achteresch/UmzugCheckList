@@ -9,12 +9,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Todo } from "@/lib/actions";
+import { Todo, Category } from "@/lib/actions";
 
 interface TodoListProps {
   todos: Todo[];
@@ -23,6 +31,7 @@ interface TodoListProps {
   onTodoDelete: (id: string) => void;
   onTodoCategoryChange?: (todoId: string) => void;
   categoryColor?: string;
+  availableCategories?: Category[]; // Liste aller verfügbaren Kategorien
 }
 
 export function TodoList({
@@ -32,6 +41,7 @@ export function TodoList({
   onTodoDelete,
   onTodoCategoryChange,
   categoryColor,
+  availableCategories = [],
 }: TodoListProps) {
   const [newTodoText, setNewTodoText] = useState("");
   const [newTodoPrice, setNewTodoPrice] = useState("");
@@ -42,6 +52,8 @@ export function TodoList({
   const [editPrice, setEditPrice] = useState("");
   const [editLink, setEditLink] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [pendingTodoData, setPendingTodoData] = useState<any>(null);
   const newTodoInputRef = useRef<HTMLInputElement>(null);
   const editTextInputRef = useRef<HTMLInputElement>(null);
 
@@ -79,7 +91,7 @@ export function TodoList({
   };
 
   // Neues Todo erstellen
-  const handleCreateTodo = () => {
+  const handleCreateTodo = (categoryId?: string) => {
     if (!newTodoText.trim()) return;
 
     // Erstelle ein Basisobjekt für das neue Todo
@@ -88,7 +100,15 @@ export function TodoList({
       // Füge Preis und Link hinzu, wenn sie vorhanden sind
       price: newTodoPrice.trim() || undefined,
       link: newTodoLink.trim() || undefined,
+      ...(categoryId && { category_id: categoryId }),
     };
+
+    // Wenn keine spezifische Kategorie angegeben ist und wir in keiner Kategorie sind
+    if (!categoryId && !categoryColor && availableCategories.length > 0) {
+      setPendingTodoData(todoData);
+      setShowCategoryDialog(true);
+      return;
+    }
 
     // Wandle das Objekt in einen JSON-String um, der an die onTodoCreate-Funktion übergeben wird
     onTodoCreate(JSON.stringify(todoData));
@@ -103,6 +123,28 @@ export function TodoList({
     setTimeout(() => {
       newTodoInputRef.current?.focus();
     }, 0);
+  };
+
+  // Todo mit ausgewählter Kategorie erstellen
+  const createTodoWithCategory = (categoryId: string) => {
+    if (!pendingTodoData) return;
+
+    const todoData = {
+      ...pendingTodoData,
+      category_id: categoryId,
+    };
+
+    onTodoCreate(JSON.stringify(todoData));
+
+    // Dialog schließen und Daten zurücksetzen
+    setShowCategoryDialog(false);
+    setPendingTodoData(null);
+
+    // Eingabefelder zurücksetzen
+    setNewTodoText("");
+    setNewTodoPrice("");
+    setNewTodoLink("");
+    setIsAddingDetails(false);
   };
 
   // Bearbeitung eines Todos starten
@@ -353,13 +395,63 @@ export function TodoList({
               placeholder="Link (https://...)"
               className="flex-1"
             />
-            <Button onClick={handleCreateTodo}>
+            <Button onClick={() => handleCreateTodo()}>
               <Plus className="h-4 w-4 mr-1" />
               Hinzufügen
             </Button>
           </motion.div>
         )}
       </div>
+
+      {/* Dialog zur Kategorieauswahl */}
+      <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Kategorie auswählen</DialogTitle>
+            <DialogDescription>
+              Wähle eine Kategorie für die neue Aufgabe aus.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-3 py-4">
+            {availableCategories.map((category) => (
+              <div
+                key={category.id}
+                className="flex items-center p-2 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+                style={{
+                  borderLeft: category.color
+                    ? `4px solid ${category.color}`
+                    : undefined,
+                }}
+                onClick={() => createTodoWithCategory(category.id)}
+              >
+                {category.color && (
+                  <div
+                    className="w-3 h-3 rounded-full mr-2"
+                    style={{ backgroundColor: category.color }}
+                  />
+                )}
+                <span>{category.name}</span>
+                <span className="text-gray-500 text-sm ml-2">
+                  ({category.todos.length})
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCategoryDialog(false);
+                setPendingTodoData(null);
+              }}
+            >
+              Abbrechen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

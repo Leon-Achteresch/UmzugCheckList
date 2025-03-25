@@ -353,6 +353,7 @@ export function CategoryManager({
                       onTodoCategoryChange(todoId, null)
                     }
                     categoryColor={category.color}
+                    availableCategories={categories}
                   />
                 </CardContent>
               </motion.div>
@@ -361,7 +362,7 @@ export function CategoryManager({
         </Card>
       ))}
 
-      {/* Aufgaben ohne Kategorie */}
+      {/* Nur die TodoList für nicht zugewiesene Todos anzeigen, wenn es welche gibt */}
       {uncategorizedTodos.length > 0 && (
         <Card>
           <CardHeader className="px-4 py-2">
@@ -380,6 +381,7 @@ export function CategoryManager({
                   onTodoCategoryChange(todoId, categories[0].id);
                 }
               }}
+              availableCategories={categories}
             />
           </CardContent>
         </Card>
