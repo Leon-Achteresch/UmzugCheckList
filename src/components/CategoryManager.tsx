@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
   Circle,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ import {
 import { Category, Todo } from "@/lib/actions";
 import { TodoList } from "./TodoList";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 interface CategoryManagerProps {
   categories: Category[];
@@ -68,6 +70,28 @@ const CATEGORY_COLORS = [
   "#C6FF33", // Limettengrün
   "#8B4513", // Braun
 ];
+
+// Hilfsfunktion zum Berechnen der Preissumme
+const calculateTotalPrice = (todos: Todo[]): number => {
+  return todos.reduce((total, todo) => {
+    if (!todo.price) return total;
+    const price =
+      typeof todo.price === "string"
+        ? parseFloat(todo.price.replace(",", "."))
+        : todo.price;
+    return total + (isNaN(price) ? 0 : price);
+  }, 0);
+};
+
+// Hilfsfunktion zum Formatieren des Preises
+const formatPrice = (price: number): string => {
+  return (
+    price.toLocaleString("de-DE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }) + " €"
+  );
+};
 
 export function CategoryManager({
   categories,
@@ -275,20 +299,29 @@ export function CategoryManager({
                 </div>
               ) : (
                 <div className="flex items-center flex-grow justify-between">
-                  <div className="flex items-center">
+                  <div className="flex items-center flex-wrap gap-2">
                     {category.color && (
                       <Circle
                         fill={category.color}
-                        className="h-3.5 w-3.5 mr-2"
+                        className="h-3.5 w-3.5"
                         stroke="none"
                       />
                     )}
                     <CardTitle className="text-md font-medium">
                       {category.name}
                     </CardTitle>
-                    <span className="text-sm text-gray-500 ml-2">
-                      ({category.todos.length})
-                    </span>
+                    <Badge variant="secondary" className="font-normal">
+                      {category.todos.length}
+                    </Badge>
+                    {category.todos.length > 0 && (
+                      <Badge
+                        variant="outline"
+                        className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400 flex items-center gap-1"
+                      >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        {formatPrice(calculateTotalPrice(category.todos))}
+                      </Badge>
+                    )}
                   </div>
 
                   <div className="flex items-center">
@@ -387,9 +420,23 @@ export function CategoryManager({
       {uncategorizedTodos.length > 0 && (
         <Card>
           <CardHeader className="px-4 py-2">
-            <CardTitle className="text-md font-medium">
-              Ohne Kategorie ({uncategorizedTodos.length})
-            </CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="text-md font-medium">
+                Ohne Kategorie
+              </CardTitle>
+              <Badge variant="secondary" className="font-normal">
+                {uncategorizedTodos.length}
+              </Badge>
+              {uncategorizedTodos.length > 0 && (
+                <Badge
+                  variant="outline"
+                  className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400 flex items-center gap-1"
+                >
+                  <CreditCard className="h-3.5 w-3.5" />
+                  {formatPrice(calculateTotalPrice(uncategorizedTodos))}
+                </Badge>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="pt-4">
             <TodoList
